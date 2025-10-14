@@ -10,6 +10,10 @@ impl Iterator for IfAddrIterator {
     type Item = *mut libc::ifaddrs;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.next.is_null() {
+            return None;
+        }
+
         let next = unsafe { (*self.next).ifa_next };
         if next.is_null() {
             None
@@ -37,5 +41,20 @@ pub fn getifaddrs() -> Result<IfAddrIterator> {
             String::from("getifaddrs"),
             getifaddrs_result,
         )),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_empty_ok() {
+        let empty = IfAddrIterator {
+            base: std::ptr::null_mut(),
+            next: std::ptr::null_mut(),
+        };
+
+        assert_eq!(empty.count(), 0);
     }
 }
